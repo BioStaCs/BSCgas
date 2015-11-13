@@ -126,6 +126,7 @@ lift.chart<-function(prediction,labels,dec.point=.5,nclass=10,colorize=T){
 
 ###############
 # lars: Efron
+# mask to lars package
 ###############
 
 lars.biostacs <-function(x, y, type = c("lasso", "lar", "forward.stagewise","stepwise"), trace = FALSE,
@@ -611,7 +612,7 @@ glm.tuning.biostacs<-function(){
 
 MultiControl <- trainControl(workers = 2, #2 cores
 
-  method = 'repeatedcv',
+ method = 'repeatedcv',
 
  number = 10, #10 Folds
 
