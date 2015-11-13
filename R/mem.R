@@ -1,3 +1,5 @@
+# The original posthttp://stackoverflow.com/questions/1395270/determining-memory-usage-of-objects
+# As it is not in any package, we record it here.
 # improved list of objects
 # .ls.objects: Dirk Eddelbuettel
 .ls.objects <- function (pos = 1, pattern, order.by,
