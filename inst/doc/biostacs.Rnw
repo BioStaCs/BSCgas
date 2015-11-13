@@ -1,0 +1,123 @@
+\documentclass{article}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+
+\begin{document}
+\section{SVM module}
+\subsection{Brief introduction to LRM and SVM}
+~Firstly, logistic regression and SVM with kernel function linear. are totally different. Statistic inferior can be made and further topics of asymptotic statistics can be discussed in the framework of logistic regression model. But we can not do this in a SVM model.\\
+Second of all, logistic regression require the variable obeys such rules below:
+\begin{enumerate}
+\item $X|_{Y=1}\sim N(\mu_1,\Sigma),X|_{Y=0}\sim N(\mu_0,\Sigma)$
+\item $\mu_1\neq\mu_2,\mbox{ but } X|_{Y=1},X|_{Y=0}$ share the same correlation matrix
+\end{enumerate}
+Although we could prove, the $X_1|_{Y=1}\sim N(.,.)$with $95\%$ confidence, other variables may not be so. Use some techniques, we can transform other variables normal, such as Box-Cox transformations(Box and Cox,1964 ):
+\[y_i^{(\lambda)} =\left\{
+\begin{array}{cc}
+\frac{(y_i+\lambda_2)^{\lambda_1}-1}{\lambda} , &\mbox{ if } \lambda_1 \neq 0 \\
+\log{(y_i+\lambda_2)} , &\mbox{ if } \lambda_1 = 0
+\end{array}
+\right.
+\]
+where
+\[
+\lambda_2+y_i>0\forall i
+\]
+Here may be some potential problems. One is that the condition probabilities can not determine the joint distributions, even when they are normal. The second is that  this method is not natural at all and may cause a transform abuse.
+So in data clean step, we only do a simple scale.
+
+If the training data set in this exercise is highly imbalanced, or rare risk as someone calls. There are lots of papers handling such problem (King and Zeng, 2001 and Owen 2007). \\ There are many interesting results. In King and Zeng's work, for example, they demonstrates that the MLE of coefficients of variables $\hat{\beta}$ need not be changed, but the constant term should be adjusted by subtracting out the bias factor\\
+$\ln\frac{\frac{1-\tau}{\tau}}{\frac{\bar{y}}{1-\bar{y}}}$, where $\tau=Pr(Y=1),\bar{y}=Pr(y=1)=mean(y)$. \\Actually, they give the general results for more generalized linear regression and others.
+
+This is the kernel we use in this study. We use a test-and-try strategy to choose the best one.
+\begin{table}[ht]
+\caption{Different SVM kernel function}\label{SVM_kernel}
+\centering
+\begin{tabular}{c|c}\hline
+Kernel function&Formular\\\hline
+Linear&$u^Tv$\\
+Polynomial&$(\gamma u^T v + coef_0)^{degree}$\\
+radial basis&$exp^(-\gamma |u-v|^2)$\\
+sigmoid:&$tanh(\gamma u^Tv + coef_0)$\\\hline
+\end{tabular}
+\end{table}
+
+\subsection{Data Clean}
+\subsubsection{Categorical Data}
+Before use e1071/libsvm, the data needed to be scaled to the range near $[-1,1]$.
+Class/Factor variables should be transformed into 0-1 matrix instead of numeric vector. For example, a feature $(a,b,a,c,b)^T$ should be transformed into
+
+\begin{tabular}{lllll}
+1	&	0&	1&	0&	0\\
+0	&	1&	0&	0&	1
+\end{tabular}
+
+\noindent{}One must pay attenion that, the rank of such matrix should be $\mbox{number of levels}-1$. Otherwise, iteraction terms should not be included.
+Foexample 
+<<<echo=T>>=
+library(biostacs)
+mat<-data.frame(X=1:10,Y=factor(sample(1:5,10,replace=T)),
+				Z=sample(letters[1:3],10,replace=T))
+a=model.matrix(~mat$Y);
+b=model.matrix(~mat$Y-1);
+cat('a is WRONG!')
+a
+cat('b is WRONG!');
+b
+cat('This is the RIGHT one:')
+a[,-1]
+example<-svm.prehandle(mat,att.biostacs=T)
+example
+@
+The trick is, whenever one tries to transform the test data with categorical features, he could comine the test data and train data together and do the data clean.
+One thing I would remind you is that, one can not intoduce new levels for particular class variable in predicted model. 
+\subsubsection{Missing Data}
+Use mean/mode. If there are several mode for one numeric array, we only randomly choose one of them (\cite{xiru1979nonparametric}).
+\subsection{Model Tuning}
+
+There are 
+
+\subsection{Penalized SVM}
+
+\section{lars}
+
+\section{GAS}
+GAS is designed to solve a K-sparse problem, and a greedy algorithm that is able to maximize the AUC in training model. Unlike LASSO/LARS (\cite{zhu2004classification}and such penalized method, GAS uses a special strategy (figure) to find out the solutions. AUC is similar to forward selection, which only adds one variable that is not already in the model and increases the value of AUC. If GAS fails to find out the solution with k variables, it will output the model that generates the maximum AUC instead.
+
+ \begin{algorithm}
+\caption{Greed AUC Stepwise}\label{alg1}
+\begin{algorithmic}[H]
+%%\tiny
+\Require initialize selected variable stack $V$, and AUC stack $A$.
+ \\\hrulefill
+\Ensure Generating proper logistic model
+\\$i\leftarrow 0$
+\\compute NULL model: $AUC\leftarrow auc_0$, A.push($auc_0$)
+\\\textbf{STEP 1} 
+\\$i++$
+\\$auc_i=max^{*}_j \{auc_{ij}\},\quad\forall j\in I/V$; where $auc_{ij}$ is the AUC of LRM with $V\cup j$ variables
+ \\A.push($auc_i$);
+ \\V.push($argmax^{*}_{j\in I/V}\{auc_{ij}\}$);
+\\\textbf{STEP 2}
+\If {$auc_i<auc_{i-1}$} 
+\State $i--$
+\State A.pull(), V.pull()
+\State Goto \textbf{Step 1} but change the definition of $max^{*}$ as the second (or third, fourth, etc ) largest number. 
+\If {$max^{*}$ can not be well-defined}
+\State \textbf{Break}
+\EndIf
+\Else
+\State Goto \textbf{Step 1} 
+\EndIf
+\\\textbf{OUTPUT} final model
+\end{algorithmic}
+\end{algorithm}
+
+\newpage
+\bibliographystyle{plain}
+\bibliography{index}
+
+\end{document}
+
+
+

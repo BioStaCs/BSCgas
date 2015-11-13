@@ -1,0 +1,10 @@
+Package: bscGAS
+Type: Package
+Title: Greedy AUC stepwise
+Version: 2.1
+Depends: R (>= 2.0), MASS, ROCR, glmnet, compiler,e1071, ggplot2, reshape2
+Date: 2012-05-21
+Author: Yifan Yang
+Maintainer: <yifan.yang@uky.edu>
+Description: Greedy AUC stepwise.
+License: GPL
